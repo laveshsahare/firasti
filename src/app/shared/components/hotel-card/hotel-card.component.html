@@ -1,0 +1,12 @@
+<article class="hotel-card">
+  <img [src]="hotel.images[0]" [alt]="hotel.name">
+  <div class="hotel-card__body">
+    <div>
+      <p class="hotel-card__location">{{ hotel.location }}</p>
+      <h3>{{ hotel.name }}</h3>
+    </div>
+    <p class="hotel-card__rating">★ {{ hotel.rating }}</p>
+    <p class="hotel-card__price">{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }} <span>/ night</span></p>
+    <a class="btn" [routerLink]="['/hotels', hotel.id]">View details</a>
+  </div>
+</article>

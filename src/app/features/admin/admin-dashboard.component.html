@@ -1,0 +1,274 @@
+<section class="container admin">
+  <div class="admin__header">
+    <div>
+      <p class="eyebrow">Admin panel</p>
+      <h1>Inventory management</h1>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span>{{ hotels.length }}</span>
+        <p>Hotels</p>
+      </div>
+      <div class="stat">
+        <span>{{ flights.length }}</span>
+        <p>Flights</p>
+      </div>
+      <div class="stat">
+        <span>{{ buses.length }}</span>
+        <p>Buses</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Inventory type">
+    <button type="button" [class.active]="activeTab === 'hotels'" (click)="setTab('hotels')">Hotels</button>
+    <button type="button" [class.active]="activeTab === 'flights'" (click)="setTab('flights')">Flights</button>
+    <button type="button" [class.active]="activeTab === 'buses'" (click)="setTab('buses')">Buses</button>
+  </div>
+
+  <div class="alert" *ngIf="message">{{ message }}</div>
+
+  <div class="admin__grid" *ngIf="activeTab === 'hotels'">
+    <form class="admin-form" [formGroup]="hotelForm" (ngSubmit)="saveHotel()">
+      <h2>{{ editingHotelId ? 'Edit hotel' : 'Add hotel' }}</h2>
+      <div class="field">
+        <label for="hotelName">Hotel name</label>
+        <input id="hotelName" formControlName="name">
+      </div>
+      <div class="field">
+        <label for="hotelLocation">Location</label>
+        <input id="hotelLocation" formControlName="location">
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="hotelPrice">Price per night</label>
+          <input id="hotelPrice" type="number" formControlName="pricePerNight">
+        </div>
+        <div class="field">
+          <label for="hotelRating">Rating</label>
+          <input id="hotelRating" type="number" min="1" max="5" step="0.1" formControlName="rating">
+        </div>
+      </div>
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea id="description" rows="4" formControlName="description"></textarea>
+      </div>
+      <div class="field">
+        <label for="amenities">Amenities</label>
+        <input id="amenities" formControlName="amenities" placeholder="Pool, Wi-Fi, Spa">
+      </div>
+      <div class="field">
+        <label for="imageUrl">Image URL</label>
+        <input id="imageUrl" formControlName="imageUrl">
+      </div>
+      <label class="checkbox">
+        <input type="checkbox" formControlName="featured">
+        Featured hotel
+      </label>
+      <div class="actions">
+        <button class="btn" type="submit">{{ editingHotelId ? 'Update hotel' : 'Add hotel' }}</button>
+        <button class="btn secondary" type="button" (click)="resetHotelForm()">Clear</button>
+      </div>
+    </form>
+
+    <div class="admin-table">
+      <div class="table-row table-row--head">
+        <span>Hotel</span>
+        <span>Price</span>
+        <span>Rating</span>
+        <span>Actions</span>
+      </div>
+      <div class="table-row" *ngFor="let hotel of hotels">
+        <span>
+          <strong>{{ hotel.name }}</strong>
+          <small>{{ hotel.location }}</small>
+        </span>
+        <span>{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</span>
+        <span>{{ hotel.rating }}/5</span>
+        <span class="row-actions">
+          <button class="btn secondary" type="button" (click)="editHotel(hotel)">Edit</button>
+          <button class="btn danger" type="button" (click)="deleteHotel(hotel)">Delete</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin__grid" *ngIf="activeTab === 'flights'">
+    <form class="admin-form" [formGroup]="flightForm" (ngSubmit)="saveFlight()">
+      <h2>{{ editingFlightId ? 'Edit flight' : 'Add flight' }}</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="airline">Airline</label>
+          <input id="airline" formControlName="airline">
+        </div>
+        <div class="field">
+          <label for="flightNumber">Flight number</label>
+          <input id="flightNumber" formControlName="flightNumber">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="flightFrom">From</label>
+          <input id="flightFrom" formControlName="from">
+        </div>
+        <div class="field">
+          <label for="flightTo">To</label>
+          <input id="flightTo" formControlName="to">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="flightDeparture">Departure time</label>
+          <input id="flightDeparture" type="time" formControlName="departureTime">
+        </div>
+        <div class="field">
+          <label for="flightArrival">Arrival time</label>
+          <input id="flightArrival" type="time" formControlName="arrivalTime">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="flightDuration">Duration</label>
+          <input id="flightDuration" formControlName="duration" placeholder="2h 15m">
+        </div>
+        <div class="field">
+          <label for="cabinClass">Cabin class</label>
+          <select id="cabinClass" formControlName="cabinClass">
+            <option value="Economy">Economy</option>
+            <option value="Premium Economy">Premium Economy</option>
+            <option value="Business">Business</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="stops">Stops</label>
+          <input id="stops" type="number" min="0" formControlName="stops">
+        </div>
+        <div class="field">
+          <label for="flightPrice">Fare</label>
+          <input id="flightPrice" type="number" formControlName="price">
+        </div>
+      </div>
+      <div class="field">
+        <label for="flightRating">Rating</label>
+        <input id="flightRating" type="number" min="1" max="5" step="0.1" formControlName="rating">
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">{{ editingFlightId ? 'Update flight' : 'Add flight' }}</button>
+        <button class="btn secondary" type="button" (click)="resetFlightForm()">Clear</button>
+      </div>
+    </form>
+
+    <div class="admin-table">
+      <div class="table-row table-row--head">
+        <span>Flight</span>
+        <span>Route</span>
+        <span>Fare</span>
+        <span>Actions</span>
+      </div>
+      <div class="table-row" *ngFor="let flight of flights">
+        <span>
+          <strong>{{ flight.airline }}</strong>
+          <small>{{ flight.flightNumber }} · {{ flight.departureTime }}-{{ flight.arrivalTime }}</small>
+        </span>
+        <span>{{ flight.from }} to {{ flight.to }}</span>
+        <span>{{ flight.price | currency:'INR':'symbol':'1.0-0' }}</span>
+        <span class="row-actions">
+          <button class="btn secondary" type="button" (click)="editFlight(flight)">Edit</button>
+          <button class="btn danger" type="button" (click)="deleteFlight(flight)">Delete</button>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin__grid" *ngIf="activeTab === 'buses'">
+    <form class="admin-form" [formGroup]="busForm" (ngSubmit)="saveBus()">
+      <h2>{{ editingBusId ? 'Edit bus' : 'Add bus' }}</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="operator">Operator</label>
+          <input id="operator" formControlName="operator">
+        </div>
+        <div class="field">
+          <label for="busNumber">Bus number</label>
+          <input id="busNumber" formControlName="busNumber">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="busFrom">From</label>
+          <input id="busFrom" formControlName="from">
+        </div>
+        <div class="field">
+          <label for="busTo">To</label>
+          <input id="busTo" formControlName="to">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="busDeparture">Departure time</label>
+          <input id="busDeparture" type="time" formControlName="departureTime">
+        </div>
+        <div class="field">
+          <label for="busArrival">Arrival time</label>
+          <input id="busArrival" type="time" formControlName="arrivalTime">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="busDuration">Duration</label>
+          <input id="busDuration" formControlName="duration" placeholder="8h 10m">
+        </div>
+        <div class="field">
+          <label for="busType">Bus type</label>
+          <select id="busType" formControlName="busType">
+            <option value="AC Sleeper">AC Sleeper</option>
+            <option value="AC Seater">AC Seater</option>
+            <option value="Volvo Multi-Axle">Volvo Multi-Axle</option>
+            <option value="Non-AC Sleeper">Non-AC Sleeper</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="seatsAvailable">Seats available</label>
+          <input id="seatsAvailable" type="number" min="1" formControlName="seatsAvailable">
+        </div>
+        <div class="field">
+          <label for="busPrice">Fare</label>
+          <input id="busPrice" type="number" formControlName="price">
+        </div>
+      </div>
+      <div class="field">
+        <label for="busRating">Rating</label>
+        <input id="busRating" type="number" min="1" max="5" step="0.1" formControlName="rating">
+      </div>
+      <div class="actions">
+        <button class="btn" type="submit">{{ editingBusId ? 'Update bus' : 'Add bus' }}</button>
+        <button class="btn secondary" type="button" (click)="resetBusForm()">Clear</button>
+      </div>
+    </form>
+
+    <div class="admin-table">
+      <div class="table-row table-row--head">
+        <span>Bus</span>
+        <span>Route</span>
+        <span>Fare</span>
+        <span>Actions</span>
+      </div>
+      <div class="table-row" *ngFor="let bus of buses">
+        <span>
+          <strong>{{ bus.operator }}</strong>
+          <small>{{ bus.busNumber }} · {{ bus.busType }}</small>
+        </span>
+        <span>{{ bus.from }} to {{ bus.to }}</span>
+        <span>{{ bus.price | currency:'INR':'symbol':'1.0-0' }}</span>
+        <span class="row-actions">
+          <button class="btn secondary" type="button" (click)="editBus(bus)">Edit</button>
+          <button class="btn danger" type="button" (click)="deleteBus(bus)">Delete</button>
+        </span>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,46 @@
+<section class="container page">
+  <div class="page__header">
+    <div>
+      <p class="eyebrow">Hotel search</p>
+      <h1>Available stays</h1>
+    </div>
+    <p>{{ hotels.length }} hotels found</p>
+  </div>
+
+  <form class="filters" [formGroup]="filtersForm" (ngSubmit)="loadHotels()">
+    <div class="field">
+      <label for="location">Location</label>
+      <input id="location" formControlName="location" placeholder="Search city or area">
+    </div>
+    <div class="field">
+      <label for="maxPrice">Max price</label>
+      <input id="maxPrice" type="number" formControlName="maxPrice" min="1000" step="500">
+    </div>
+    <div class="field">
+      <label for="minRating">Rating</label>
+      <select id="minRating" formControlName="minRating">
+        <option [value]="0">Any rating</option>
+        <option [value]="4">4+</option>
+        <option [value]="4.5">4.5+</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="sort">Sort</label>
+      <select id="sort" formControlName="sort">
+        <option value="">Recommended</option>
+        <option value="priceAsc">Price low to high</option>
+      </select>
+    </div>
+    <button class="btn" type="submit">Apply</button>
+  </form>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="hotel-grid" *ngIf="hotels.length; else noHotels">
+    <app-hotel-card *ngFor="let hotel of hotels" [hotel]="hotel"></app-hotel-card>
+  </div>
+
+  <ng-template #noHotels>
+    <div class="empty-state">No hotels match your filters.</div>
+  </ng-template>
+</section>

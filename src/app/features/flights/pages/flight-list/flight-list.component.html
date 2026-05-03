@@ -1,0 +1,80 @@
+<section class="container flights-page">
+  <div class="page__header">
+    <div>
+      <p class="eyebrow">Flight search</p>
+      <h1>Book domestic flights</h1>
+    </div>
+    <p>{{ flights.length }} flights found</p>
+  </div>
+
+  <form class="filters" [formGroup]="searchForm" (ngSubmit)="loadFlights()">
+    <div class="field">
+      <label for="from">From</label>
+      <input id="from" formControlName="from" placeholder="Delhi">
+    </div>
+    <div class="field">
+      <label for="to">To</label>
+      <input id="to" formControlName="to" placeholder="Goa">
+    </div>
+    <div class="field">
+      <label for="departureDate">Departure</label>
+      <input id="departureDate" type="date" formControlName="departureDate">
+    </div>
+    <div class="field">
+      <label for="cabinClass">Cabin</label>
+      <select id="cabinClass" formControlName="cabinClass">
+        <option value="">Any cabin</option>
+        <option value="Economy">Economy</option>
+        <option value="Premium Economy">Premium Economy</option>
+        <option value="Business">Business</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="maxPrice">Max fare</label>
+      <input id="maxPrice" type="number" formControlName="maxPrice" min="1000" step="500">
+    </div>
+    <button class="btn" type="submit">Search</button>
+  </form>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="flight-list" *ngIf="flights.length; else noFlights">
+    <article class="flight-card" *ngFor="let flight of flights">
+      <div class="airline">
+        <span class="airline__mark">{{ flight.airline.slice(0, 1) }}</span>
+        <div>
+          <h2>{{ flight.airline }}</h2>
+          <p>{{ flight.flightNumber }} · {{ flight.cabinClass }}</p>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div>
+          <strong>{{ flight.departureTime }}</strong>
+          <span>{{ flight.from }}</span>
+        </div>
+        <div class="timeline__line">
+          <span>{{ flight.duration }}</span>
+        </div>
+        <div>
+          <strong>{{ flight.arrivalTime }}</strong>
+          <span>{{ flight.to }}</span>
+        </div>
+      </div>
+
+      <div class="flight-meta">
+        <span>{{ flight.stops === 0 ? 'Non-stop' : flight.stops + ' stop' }}</span>
+        <span>★ {{ flight.rating }}</span>
+      </div>
+
+      <div class="fare">
+        <strong>{{ flight.price | currency:'INR':'symbol':'1.0-0' }}</strong>
+        <a class="btn" [routerLink]="['/booking/flight', flight.id]" [queryParams]="{ departureDate: searchForm.controls.departureDate.value }">Book flight</a>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noFlights>
+    <div class="empty-state">No flights match your search.</div>
+  </ng-template>
+</section>

@@ -1,0 +1,81 @@
+<section class="container buses-page">
+  <div class="page__header">
+    <div>
+      <p class="eyebrow">Bus search</p>
+      <h1>Book intercity buses</h1>
+    </div>
+    <p>{{ buses.length }} buses found</p>
+  </div>
+
+  <form class="filters" [formGroup]="searchForm" (ngSubmit)="loadBuses()">
+    <div class="field">
+      <label for="from">From</label>
+      <input id="from" formControlName="from" placeholder="Bengaluru">
+    </div>
+    <div class="field">
+      <label for="to">To</label>
+      <input id="to" formControlName="to" placeholder="Goa">
+    </div>
+    <div class="field">
+      <label for="departureDate">Travel date</label>
+      <input id="departureDate" type="date" formControlName="departureDate">
+    </div>
+    <div class="field">
+      <label for="busType">Bus type</label>
+      <select id="busType" formControlName="busType">
+        <option value="">Any type</option>
+        <option value="AC Sleeper">AC Sleeper</option>
+        <option value="AC Seater">AC Seater</option>
+        <option value="Volvo Multi-Axle">Volvo Multi-Axle</option>
+        <option value="Non-AC Sleeper">Non-AC Sleeper</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="maxPrice">Max fare</label>
+      <input id="maxPrice" type="number" formControlName="maxPrice" min="300" step="100">
+    </div>
+    <button class="btn" type="submit">Search</button>
+  </form>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="bus-list" *ngIf="buses.length; else noBuses">
+    <article class="bus-card" *ngFor="let bus of buses">
+      <div class="operator">
+        <span class="operator__mark">{{ bus.operator.slice(0, 1) }}</span>
+        <div>
+          <h2>{{ bus.operator }}</h2>
+          <p>{{ bus.busNumber }} · {{ bus.busType }}</p>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div>
+          <strong>{{ bus.departureTime }}</strong>
+          <span>{{ bus.from }}</span>
+        </div>
+        <div class="timeline__line">
+          <span>{{ bus.duration }}</span>
+        </div>
+        <div>
+          <strong>{{ bus.arrivalTime }}</strong>
+          <span>{{ bus.to }}</span>
+        </div>
+      </div>
+
+      <div class="bus-meta">
+        <span>{{ bus.seatsAvailable }} seats left</span>
+        <span>★ {{ bus.rating }}</span>
+      </div>
+
+      <div class="fare">
+        <strong>{{ bus.price | currency:'INR':'symbol':'1.0-0' }}</strong>
+        <a class="btn" [routerLink]="['/booking/bus', bus.id]" [queryParams]="{ departureDate: searchForm.controls.departureDate.value }">Book bus</a>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noBuses>
+    <div class="empty-state">No buses match your search.</div>
+  </ng-template>
+</section>

@@ -1,0 +1,19 @@
+<section class="auth-page">
+  <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="eyebrow">Welcome back</p>
+    <h1>Login</h1>
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" placeholder="you@example.com">
+      <span class="error" *ngIf="form.controls.email.touched && form.controls.email.invalid">A valid email is required.</span>
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input id="password" type="password" formControlName="password" placeholder="Minimum 6 characters">
+      <span class="error" *ngIf="form.controls.password.touched && form.controls.password.invalid">Password must be at least 6 characters.</span>
+    </div>
+    <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+    <button class="btn" type="submit">Login</button>
+    <p>New here? <a routerLink="/auth/register">Create an account</a></p>
+  </form>
+</section>

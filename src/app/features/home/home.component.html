@@ -1,0 +1,88 @@
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__content">
+      <p class="eyebrow">Smart stays across India</p>
+      <h1>Book hotels, flights, and buses for every trip.</h1>
+      <p>Search trusted stays, compare fares, and confirm your travel in a few clean steps.</p>
+    </div>
+
+    <div class="booking-picker">
+      <button class="booking-tile" type="button" [class.active]="activeSearch === 'hotels'" (click)="activeSearch = 'hotels'">
+        <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=700&q=80" alt="Hotel booking">
+        <span>Hotels</span>
+      </button>
+      <button class="booking-tile" type="button" [class.active]="activeSearch === 'flights'" (click)="activeSearch = 'flights'">
+        <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=700&q=80" alt="Flight booking">
+        <span>Flights</span>
+      </button>
+      <button class="booking-tile" type="button" [class.active]="activeSearch === 'buses'" (click)="activeSearch = 'buses'">
+        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=700&q=80" alt="Bus booking">
+        <span>Buses</span>
+      </button>
+    </div>
+
+    <div class="search-panel">
+      <form class="search" [formGroup]="searchForm" (ngSubmit)="search()" *ngIf="activeSearch === 'hotels'">
+        <strong>Hotels</strong>
+        <div class="field">
+          <label for="location">Location</label>
+          <input id="location" type="text" formControlName="location" placeholder="Goa, Manali, Mumbai">
+        </div>
+        <div class="field">
+          <label for="checkIn">Check-in</label>
+          <input id="checkIn" type="date" formControlName="checkIn">
+        </div>
+        <div class="field">
+          <label for="checkOut">Check-out</label>
+          <input id="checkOut" type="date" formControlName="checkOut">
+        </div>
+        <button class="btn" type="submit">Search hotels</button>
+      </form>
+
+      <form class="search search--transport" [formGroup]="flightSearchForm" (ngSubmit)="searchFlights()" *ngIf="activeSearch === 'flights'">
+        <strong>Flights</strong>
+        <div class="field">
+          <label for="flightFrom">From</label>
+          <input id="flightFrom" type="text" formControlName="from" placeholder="Delhi">
+        </div>
+        <div class="field">
+          <label for="flightTo">To</label>
+          <input id="flightTo" type="text" formControlName="to" placeholder="Goa">
+        </div>
+        <div class="field">
+          <label for="flightDate">Date</label>
+          <input id="flightDate" type="date" formControlName="departureDate">
+        </div>
+        <button class="btn" type="submit">Search flights</button>
+      </form>
+
+      <form class="search search--transport" [formGroup]="busSearchForm" (ngSubmit)="searchBuses()" *ngIf="activeSearch === 'buses'">
+        <strong>Buses</strong>
+        <div class="field">
+          <label for="busFrom">From</label>
+          <input id="busFrom" type="text" formControlName="from" placeholder="Bengaluru">
+        </div>
+        <div class="field">
+          <label for="busTo">To</label>
+          <input id="busTo" type="text" formControlName="to" placeholder="Goa">
+        </div>
+        <div class="field">
+          <label for="busDate">Date</label>
+          <input id="busDate" type="date" formControlName="departureDate">
+        </div>
+        <button class="btn" type="submit">Search buses</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section class="container featured">
+  <div class="featured__header">
+    <h2 class="section-title">Featured hotels</h2>
+    <a routerLink="/hotels">View all hotels</a>
+  </div>
+
+  <div class="featured__grid">
+    <app-hotel-card *ngFor="let hotel of featuredHotels" [hotel]="hotel"></app-hotel-card>
+  </div>
+</section>

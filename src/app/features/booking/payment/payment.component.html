@@ -1,0 +1,76 @@
+<section class="container payment-page" *ngIf="booking; else missingBooking">
+  <div>
+    <p class="eyebrow">Payment</p>
+    <h1>Complete your payment</h1>
+
+    <div class="payment-tabs" role="tablist" aria-label="Payment method">
+      <button type="button" [class.active]="paymentMode === 'card'" (click)="setPaymentMode('card')">Card</button>
+      <button type="button" [class.active]="paymentMode === 'upi'" (click)="setPaymentMode('upi')">UPI</button>
+      <button type="button" [class.active]="paymentMode === 'netbanking'" (click)="setPaymentMode('netbanking')">Net Banking</button>
+    </div>
+
+    <form class="payment-form" [formGroup]="paymentForm" (ngSubmit)="payNow()">
+      <ng-container *ngIf="paymentMode === 'card'">
+        <div class="field">
+          <label for="cardName">Name on card</label>
+          <input id="cardName" formControlName="cardName" placeholder="Card holder name">
+        </div>
+        <div class="field">
+          <label for="cardNumber">Card number</label>
+          <input id="cardNumber" formControlName="cardNumber" maxlength="16" placeholder="16 digit card number">
+          <span class="error" *ngIf="paymentForm.controls.cardNumber.touched && paymentForm.controls.cardNumber.invalid">Enter a valid 16 digit card number.</span>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="expiry">Expiry</label>
+            <input id="expiry" formControlName="expiry" placeholder="MM/YY">
+          </div>
+          <div class="field">
+            <label for="cvv">CVV</label>
+            <input id="cvv" formControlName="cvv" maxlength="3" placeholder="123">
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="paymentMode === 'upi'">
+        <div class="field">
+          <label for="upiId">UPI ID</label>
+          <input id="upiId" formControlName="upiId" placeholder="name@upi">
+          <span class="error" *ngIf="paymentForm.controls.upiId.touched && paymentForm.controls.upiId.invalid">Enter a valid UPI ID.</span>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="paymentMode === 'netbanking'">
+        <div class="field">
+          <label for="bank">Choose bank</label>
+          <select id="bank" formControlName="bank">
+            <option value="">Select bank</option>
+            <option value="sbi">State Bank of India</option>
+            <option value="hdfc">HDFC Bank</option>
+            <option value="icici">ICICI Bank</option>
+            <option value="axis">Axis Bank</option>
+          </select>
+        </div>
+      </ng-container>
+
+      <div class="alert" *ngIf="successMessage">{{ successMessage }}</div>
+      <button class="btn" type="submit">Pay {{ payableAmount | currency:'INR':'symbol':'1.0-0' }}</button>
+    </form>
+  </div>
+
+  <aside class="payment-summary">
+    <p>{{ booking.productType || 'Booking' }}</p>
+    <h2>{{ booking.title || 'Travel booking' }}</h2>
+    <span>{{ booking.route }}</span>
+    <div class="amount-row">
+      <span>Amount payable</span>
+      <strong>{{ payableAmount | currency:'INR':'symbol':'1.0-0' }}</strong>
+    </div>
+  </aside>
+</section>
+
+<ng-template #missingBooking>
+  <div class="container empty-state">
+    Booking details were not found. Please create a booking again.
+  </div>
+</ng-template>

@@ -1,0 +1,37 @@
+<section class="container history-page">
+  <div class="history-page__header">
+    <div>
+      <p class="eyebrow">Your trips</p>
+      <h1>Previous bookings</h1>
+    </div>
+    <a class="btn secondary" routerLink="/">Book another trip</a>
+  </div>
+
+  <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+
+  <div class="booking-list" *ngIf="bookings.length; else noBookings">
+    <article class="booking-card" *ngFor="let booking of bookings">
+      <div>
+        <span class="pill">{{ bookingLabel(booking) }}</span>
+        <h2>{{ booking.title || 'Travel booking' }}</h2>
+        <p>{{ booking.route || booking.email }}</p>
+      </div>
+
+      <div class="booking-card__meta">
+        <span>{{ dateLabel(booking) }}</span>
+        <span>{{ booking.guests || booking.passengers || 1 }} {{ normalizedProductType(booking) === 'hotel' ? 'guest(s)' : 'passenger(s)' }}</span>
+      </div>
+
+      <div class="booking-card__fare">
+        <strong *ngIf="booking.price">{{ booking.price | currency:'INR':'symbol':'1.0-0' }}</strong>
+        <span>{{ booking.status }}</span>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #noBookings>
+    <div class="empty-state">
+      No previous bookings yet. Your confirmed hotel, flight, and bus bookings will appear here after login.
+    </div>
+  </ng-template>
+</section>

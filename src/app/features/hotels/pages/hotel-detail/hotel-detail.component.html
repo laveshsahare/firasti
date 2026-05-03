@@ -1,0 +1,33 @@
+<section class="container detail" *ngIf="hotel; else missing">
+  <div class="gallery">
+    <img class="gallery__main" [src]="selectedImage" [alt]="hotel.name">
+    <div class="gallery__thumbs">
+      <button type="button" *ngFor="let image of hotel.images" (click)="selectedImage = image" [class.active]="selectedImage === image">
+        <img [src]="image" [alt]="hotel.name">
+      </button>
+    </div>
+  </div>
+
+  <div class="detail__content">
+    <p class="location">{{ hotel.location }}</p>
+    <h1>{{ hotel.name }}</h1>
+    <p class="rating">★ {{ hotel.rating }} guest rating</p>
+    <p>{{ hotel.description }}</p>
+
+    <div class="amenities">
+      <span *ngFor="let amenity of hotel.amenities">{{ amenity }}</span>
+    </div>
+
+    <div class="booking-panel">
+      <div>
+        <p>Price per night</p>
+        <strong>{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }}</strong>
+      </div>
+      <a class="btn" [routerLink]="['/booking/hotel', hotel.id]">Book Now</a>
+    </div>
+  </div>
+</section>
+
+<ng-template #missing>
+  <div class="container empty-state">Hotel not found.</div>
+</ng-template>

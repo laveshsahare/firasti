@@ -1,0 +1,33 @@
+<header class="nav">
+  <div class="container nav__inner">
+    <a class="brand" routerLink="/" aria-label="SukhakarPrawas home">
+      <span class="brand__mark">S</span>
+      <span>SukhakarPrawas</span>
+    </a>
+
+    <button class="nav__toggle" type="button" (click)="menuOpen = !menuOpen" aria-label="Toggle navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="nav__links" [class.open]="menuOpen">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">Home</a>
+      <a routerLink="/hotels" routerLinkActive="active" (click)="menuOpen = false">Hotels</a>
+      <a routerLink="/flights" routerLinkActive="active" (click)="menuOpen = false">Flights</a>
+      <a routerLink="/buses" routerLinkActive="active" (click)="menuOpen = false">Buses</a>
+      <a routerLink="/admin" routerLinkActive="active" (click)="menuOpen = false">Admin</a>
+
+      <ng-container *ngIf="currentUser$ | async as user; else guestLinks">
+        <a routerLink="/booking/history" routerLinkActive="active" (click)="menuOpen = false">My Bookings</a>
+        <span class="nav__user">{{ user.name }}</span>
+        <button class="btn secondary" type="button" (click)="logout()">Logout</button>
+      </ng-container>
+
+      <ng-template #guestLinks>
+        <a class="btn secondary" routerLink="/auth/login" (click)="menuOpen = false">Login</a>
+        <a class="btn" routerLink="/auth/register" (click)="menuOpen = false">Register</a>
+      </ng-template>
+    </nav>
+  </div>
+</header>

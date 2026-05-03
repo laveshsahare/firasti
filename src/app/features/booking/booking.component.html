@@ -1,0 +1,91 @@
+<section class="container booking" *ngIf="hasBookingTarget; else noSelection">
+  <div>
+    <p class="eyebrow">Secure booking</p>
+    <h1>{{ title }}</h1>
+
+    <form class="booking-form" [formGroup]="bookingForm" (ngSubmit)="confirmBooking()">
+      <div class="field">
+        <label for="guestName">Full name</label>
+        <input id="guestName" formControlName="guestName" placeholder="Guest name">
+        <span class="error" *ngIf="bookingForm.controls.guestName.touched && bookingForm.controls.guestName.invalid">Name is required.</span>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="you@example.com">
+        <span class="error" *ngIf="bookingForm.controls.email.touched && bookingForm.controls.email.invalid">Enter a valid email.</span>
+      </div>
+
+      <div class="form-grid" *ngIf="bookingType === 'hotel'; else transportDates">
+        <div class="field">
+          <label for="checkIn">Check-in</label>
+          <input id="checkIn" type="date" formControlName="checkIn">
+        </div>
+        <div class="field">
+          <label for="checkOut">Check-out</label>
+          <input id="checkOut" type="date" formControlName="checkOut">
+        </div>
+      </div>
+
+      <ng-template #transportDates>
+        <div class="form-grid">
+          <div class="field">
+            <label for="departureDate">Travel date</label>
+            <input id="departureDate" type="date" formControlName="departureDate">
+            <span class="error" *ngIf="bookingForm.controls.departureDate.touched && bookingForm.controls.departureDate.invalid">Travel date is required.</span>
+          </div>
+          <div class="field">
+            <label for="returnDate">Return date</label>
+            <input id="returnDate" type="date" formControlName="returnDate">
+          </div>
+        </div>
+      </ng-template>
+
+      <div class="field">
+        <label for="guests">{{ bookingType === 'hotel' ? 'Guests' : 'Passengers' }}</label>
+        <input id="guests" type="number" formControlName="guests" min="1" max="8">
+      </div>
+      <div class="alert" *ngIf="successMessage">{{ successMessage }}</div>
+      <div class="alert error" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <button class="btn" type="submit">Confirm {{ bookingType }} booking</button>
+    </form>
+  </div>
+
+  <aside class="summary" *ngIf="hotel">
+    <img [src]="hotel.images[0]" [alt]="hotel.name">
+    <div>
+      <p>{{ hotel.location }}</p>
+      <h2>{{ hotel.name }}</h2>
+      <strong>{{ hotel.pricePerNight | currency:'INR':'symbol':'1.0-0' }} / night</strong>
+    </div>
+  </aside>
+
+  <aside class="summary transport-summary" *ngIf="flight">
+    <div>
+      <p>{{ flight.flightNumber }} · {{ flight.cabinClass }}</p>
+      <h2>{{ flight.airline }}</h2>
+      <div class="route-line">
+        <span>{{ flight.departureTime }} {{ flight.from }}</span>
+        <span>{{ flight.duration }}</span>
+        <span>{{ flight.arrivalTime }} {{ flight.to }}</span>
+      </div>
+      <strong>{{ flight.price | currency:'INR':'symbol':'1.0-0' }} / passenger</strong>
+    </div>
+  </aside>
+
+  <aside class="summary transport-summary" *ngIf="bus">
+    <div>
+      <p>{{ bus.busNumber }} · {{ bus.busType }}</p>
+      <h2>{{ bus.operator }}</h2>
+      <div class="route-line">
+        <span>{{ bus.departureTime }} {{ bus.from }}</span>
+        <span>{{ bus.duration }}</span>
+        <span>{{ bus.arrivalTime }} {{ bus.to }}</span>
+      </div>
+      <strong>{{ bus.price | currency:'INR':'symbol':'1.0-0' }} / passenger</strong>
+    </div>
+  </aside>
+</section>
+
+<ng-template #noSelection>
+  <div class="container empty-state">{{ missingMessage }}</div>
+</ng-template>
