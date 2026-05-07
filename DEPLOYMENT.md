@@ -27,6 +27,7 @@ DB_URL=jdbc:mysql://host:port/database
 DB_USERNAME=your_database_user
 DB_PASSWORD=your_database_password
 CORS_ALLOWED_ORIGINS=https://romify-travel-and-tours.vercel.app
+FRONTEND_BASE_URL=https://romify-travel-and-tours.vercel.app
 RAZORPAY_KEY_ID=rzp_test_or_live_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 ```

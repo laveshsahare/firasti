@@ -7,15 +7,18 @@
       <div class="checkout-payment">
         <div class="checkout-payment__mark">R</div>
         <div class="checkout-payment__details">
-          <strong>Razorpay Checkout</strong>
+          <strong>Razorpay payment page</strong>
           <p>{{ paymentMessage }}</p>
           <div>
             <span>Amount</span>
             <b>{{ payableAmount | currency:'INR':'symbol':'1.0-0' }}</b>
           </div>
           <div class="payment-actions">
+            <button class="btn" type="button" (click)="payOnRazorpayPage()" [disabled]="isCreatingPage || isVerifyingPage">
+              {{ isCreatingPage ? 'Creating page...' : isVerifyingPage ? 'Verifying...' : 'Open Razorpay page' }}
+            </button>
             <button class="btn" type="button" (click)="payWithRazorpay()" [disabled]="isCreatingOrder || isVerifyingPayment">
-              {{ isCreatingOrder ? 'Creating order...' : isVerifyingPayment ? 'Verifying...' : 'Pay with Razorpay' }}
+              {{ isCreatingOrder ? 'Creating order...' : isVerifyingPayment ? 'Verifying...' : 'Checkout popup' }}
             </button>
             <button class="btn secondary" type="button" (click)="checkPaymentStatus()" [disabled]="isCheckingStatus">
               {{ isCheckingStatus ? 'Checking...' : 'Check status' }}

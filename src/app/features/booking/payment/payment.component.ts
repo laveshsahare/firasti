@@ -48,6 +48,8 @@ export class PaymentComponent implements OnInit {
   paymentMessage = 'Create a secure Razorpay payment for this booking.';
   errorMessage = '';
   successMessage = '';
+  isCreatingPage = false;
+  isVerifyingPage = false;
   isCreatingQr = false;
   isCreatingOrder = false;
   isVerifyingPayment = false;
@@ -62,12 +64,35 @@ export class PaymentComponent implements OnInit {
   ngOnInit(): void {
     this.bookingId = Number(this.route.snapshot.paramMap.get('bookingId'));
     this.booking = this.bookingService.getLocalBookingById(this.bookingId);
+    this.verifyReturnedPaymentPage();
   }
 
   get payableAmount(): number {
     const unitPrice = Number(this.booking?.price ?? 0);
     const count = Number(this.booking?.guests ?? this.booking?.passengers ?? 1);
     return unitPrice * Math.max(1, count);
+  }
+
+  payOnRazorpayPage(): void {
+    if (!this.bookingId || this.isCreatingPage || this.isVerifyingPage) {
+      return;
+    }
+
+    this.isCreatingPage = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.paymentMessage = 'Creating your Razorpay payment page...';
+    this.bookingService.createPaymentPage(this.bookingId).subscribe({
+      next: (payment) => {
+        this.isCreatingPage = false;
+        window.location.href = payment.paymentUrl;
+      },
+      error: (error) => {
+        this.isCreatingPage = false;
+        this.paymentMessage = 'Create a secure Razorpay payment for this booking.';
+        this.errorMessage = this.readErrorMessage(error, 'Unable to create Razorpay payment page. Check backend Razorpay credentials.');
+      }
+    });
   }
 
   payWithRazorpay(): void {
@@ -86,6 +111,51 @@ export class PaymentComponent implements OnInit {
       error: (error) => {
         this.isCreatingOrder = false;
         this.errorMessage = this.readErrorMessage(error, 'Unable to create Razorpay payment. Check backend Razorpay credentials.');
+      }
+    });
+  }
+
+  private verifyReturnedPaymentPage(): void {
+    const query = this.route.snapshot.queryParamMap;
+    const paymentId = query.get('razorpay_payment_id');
+    const paymentLinkId = query.get('razorpay_payment_link_id');
+    const paymentLinkReferenceId = query.get('razorpay_payment_link_reference_id');
+    const paymentLinkStatus = query.get('razorpay_payment_link_status');
+    const signature = query.get('razorpay_signature');
+
+    if (!paymentId || !paymentLinkId || !paymentLinkReferenceId || !paymentLinkStatus || !signature || !this.bookingId) {
+      return;
+    }
+
+    this.isVerifyingPage = true;
+    this.paymentMessage = 'Verifying Razorpay payment...';
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    this.bookingService.verifyPaymentPage(this.bookingId, {
+      razorpayPaymentId: paymentId,
+      razorpayPaymentLinkId: paymentLinkId,
+      razorpayPaymentLinkReferenceId: paymentLinkReferenceId,
+      razorpayPaymentLinkStatus: paymentLinkStatus,
+      razorpaySignature: signature
+    }).subscribe({
+      next: (payment) => {
+        this.isVerifyingPage = false;
+        this.paymentMessage = payment.message;
+        this.successMessage = payment.status === 'SUCCESS' ? payment.message : '';
+        if (this.booking) {
+          this.booking = {
+            ...this.booking,
+            status: payment.status === 'SUCCESS' ? 'CONFIRMED' : payment.status === 'FAILED' ? 'CANCELLED' : 'PENDING',
+            paymentStatus: payment.status,
+            paymentId: payment.paymentId
+          };
+        }
+      },
+      error: (error) => {
+        this.isVerifyingPage = false;
+        this.paymentMessage = 'Payment verification failed.';
+        this.errorMessage = this.readErrorMessage(error, 'Payment page verification failed.');
       }
     });
   }

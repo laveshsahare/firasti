@@ -57,6 +57,8 @@ public class Booking {
   private String paymentStatus = "PENDING";
   private String paymentGateway;
   private String paymentOrderId;
+  private String paymentLinkId;
+  private String paymentLinkUrl;
   private String paymentQrId;
   private String paymentQrImageUrl;
   private String paymentId;
@@ -235,6 +237,22 @@ public class Booking {
 
   public void setPaymentOrderId(String paymentOrderId) {
     this.paymentOrderId = paymentOrderId;
+  }
+
+  public String getPaymentLinkId() {
+    return paymentLinkId;
+  }
+
+  public void setPaymentLinkId(String paymentLinkId) {
+    this.paymentLinkId = paymentLinkId;
+  }
+
+  public String getPaymentLinkUrl() {
+    return paymentLinkUrl;
+  }
+
+  public void setPaymentLinkUrl(String paymentLinkUrl) {
+    this.paymentLinkUrl = paymentLinkUrl;
   }
 
   public String getPaymentQrId() {

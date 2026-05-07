@@ -3,8 +3,10 @@ package com.veena.travel.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.veena.travel.dto.PaymentOrderResponse;
+import com.veena.travel.dto.PaymentPageResponse;
 import com.veena.travel.dto.PaymentQrResponse;
 import com.veena.travel.dto.PaymentStatusResponse;
+import com.veena.travel.dto.VerifyPaymentLinkRequest;
 import com.veena.travel.dto.VerifyPaymentRequest;
 import com.veena.travel.model.Booking;
 import com.veena.travel.model.BookingStatus;
@@ -32,6 +34,7 @@ public class RazorpayQrPaymentService {
   private static final String PAYMENT_PENDING = "PENDING";
   private static final String PAYMENT_SUCCESS = "SUCCESS";
   private static final String PAYMENT_FAILED = "FAILED";
+  private static final String GATEWAY_RAZORPAY_PAYMENT_LINK = "RAZORPAY_PAYMENT_LINK";
   private static final String GATEWAY_RAZORPAY_CHECKOUT = "RAZORPAY_CHECKOUT";
   private static final String GATEWAY_RAZORPAY_UPI_QR = "RAZORPAY_UPI_QR";
   private static final String GATEWAY_MANUAL_UPI_QR = "MANUAL_UPI_QR";
@@ -43,6 +46,7 @@ public class RazorpayQrPaymentService {
   private final ObjectMapper objectMapper;
   private final String keyId;
   private final String keySecret;
+  private final String frontendBaseUrl;
 
   public RazorpayQrPaymentService(
       BookingRepository bookingRepository,
@@ -50,7 +54,8 @@ public class RazorpayQrPaymentService {
       RestClient.Builder restClientBuilder,
       ObjectMapper objectMapper,
       @Value("${app.razorpay.key-id:}") String keyId,
-      @Value("${app.razorpay.key-secret:}") String keySecret
+      @Value("${app.razorpay.key-secret:}") String keySecret,
+      @Value("${app.frontend.base-url:https://romify-travel-and-tours.vercel.app}") String frontendBaseUrl
   ) {
     this.bookingRepository = bookingRepository;
     this.emailService = emailService;
@@ -58,6 +63,104 @@ public class RazorpayQrPaymentService {
     this.objectMapper = objectMapper;
     this.keyId = keyId;
     this.keySecret = keySecret;
+    this.frontendBaseUrl = frontendBaseUrl.replaceAll("/+$", "");
+  }
+
+  public PaymentPageResponse createPaymentPage(Long bookingId, Principal principal) {
+    var booking = findUserBooking(bookingId, principal);
+    var amount = payableAmount(booking);
+    requireGatewayConfig();
+
+    var amountInPaise = amount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).intValueExact();
+    var referenceId = ("booking_" + booking.getId() + "_" + Instant.now().getEpochSecond());
+    if (referenceId.length() > 40) {
+      referenceId = referenceId.substring(0, 40);
+    }
+
+    var body = Map.ofEntries(
+        Map.entry("amount", amountInPaise),
+        Map.entry("currency", "INR"),
+        Map.entry("accept_partial", false),
+        Map.entry("reference_id", referenceId),
+        Map.entry("description", "Romify booking #" + booking.getId()),
+        Map.entry("customer", Map.of(
+            "name", defaultString(booking.getGuestName(), booking.getUser().getName()),
+            "email", defaultString(booking.getEmail(), booking.getUser().getEmail())
+        )),
+        Map.entry("notify", Map.of("sms", false, "email", false)),
+        Map.entry("reminder_enable", false),
+        Map.entry("callback_url", frontendBaseUrl + "/booking/payment/" + booking.getId()),
+        Map.entry("callback_method", "get"),
+        Map.entry("notes", Map.of("booking_id", booking.getId().toString()))
+    );
+
+    JsonNode response;
+    try {
+      response = restClient.post()
+          .uri("/payment_links")
+          .header(HttpHeaders.AUTHORIZATION, basicAuthHeader())
+          .body(body)
+          .retrieve()
+          .body(JsonNode.class);
+    } catch (RestClientResponseException exception) {
+      throw gatewayException(exception);
+    }
+
+    var paymentLinkId = response == null ? "" : response.path("id").asText();
+    var paymentUrl = response == null ? "" : response.path("short_url").asText();
+    if (paymentLinkId.isBlank() || paymentUrl.isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Payment gateway did not return a payment page URL.");
+    }
+
+    booking.setPaymentGateway(GATEWAY_RAZORPAY_PAYMENT_LINK);
+    booking.setPaymentLinkId(paymentLinkId);
+    booking.setPaymentLinkUrl(paymentUrl);
+    booking.setPaymentStatus(PAYMENT_PENDING);
+    booking.setStatus(BookingStatus.PENDING);
+    bookingRepository.save(booking);
+
+    return new PaymentPageResponse(
+        booking.getId(),
+        GATEWAY_RAZORPAY_PAYMENT_LINK,
+        paymentLinkId,
+        paymentUrl,
+        amount,
+        amountInPaise,
+        "INR",
+        PAYMENT_PENDING
+    );
+  }
+
+  public PaymentStatusResponse verifyPaymentPage(Long bookingId, VerifyPaymentLinkRequest request, Principal principal) {
+    var booking = findUserBooking(bookingId, principal);
+
+    if (booking.getPaymentLinkId() == null || booking.getPaymentLinkId().isBlank()) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Create a Razorpay payment page before verifying payment.");
+    }
+
+    if (!booking.getPaymentLinkId().equals(request.razorpayPaymentLinkId())) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment page does not match this booking.");
+    }
+
+    if (!isValidPaymentLinkSignature(request)) {
+      booking.setPaymentStatus(PAYMENT_FAILED);
+      booking.setStatus(BookingStatus.CANCELLED);
+      bookingRepository.save(booking);
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment page signature verification failed.");
+    }
+
+    if (!"paid".equalsIgnoreCase(request.razorpayPaymentLinkStatus())) {
+      return new PaymentStatusResponse(booking.getId(), PAYMENT_PENDING, null, "Payment page returned status: " + request.razorpayPaymentLinkStatus() + ".");
+    }
+
+    booking.setPaymentGateway(GATEWAY_RAZORPAY_PAYMENT_LINK);
+    booking.setPaymentStatus(PAYMENT_SUCCESS);
+    booking.setStatus(BookingStatus.CONFIRMED);
+    booking.setPaymentId(request.razorpayPaymentId());
+    var savedBooking = bookingRepository.save(booking);
+    emailService.sendTicketEmail(savedBooking);
+
+    return new PaymentStatusResponse(savedBooking.getId(), PAYMENT_SUCCESS, savedBooking.getPaymentId(), "Payment successful. Booking ticket has been emailed.");
   }
 
   public PaymentOrderResponse createOrder(Long bookingId, Principal principal) {
@@ -315,8 +418,19 @@ public class RazorpayQrPaymentService {
   }
 
   private boolean isValidSignature(String orderId, String paymentId, String signature) {
+    return isValidHmac(orderId + "|" + paymentId, signature);
+  }
+
+  private boolean isValidPaymentLinkSignature(VerifyPaymentLinkRequest request) {
+    var payload = request.razorpayPaymentLinkId()
+        + "|" + request.razorpayPaymentLinkReferenceId()
+        + "|" + request.razorpayPaymentLinkStatus()
+        + "|" + request.razorpayPaymentId();
+    return isValidHmac(payload, request.razorpaySignature());
+  }
+
+  private boolean isValidHmac(String payload, String signature) {
     try {
-      var payload = orderId + "|" + paymentId;
       var mac = Mac.getInstance("HmacSHA256");
       mac.init(new SecretKeySpec(keySecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
       var generatedSignature = HexFormat.of().formatHex(mac.doFinal(payload.getBytes(StandardCharsets.UTF_8)));
@@ -324,6 +438,13 @@ public class RazorpayQrPaymentService {
     } catch (Exception exception) {
       throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to verify payment signature.");
     }
+  }
+
+  private String defaultString(String value, String fallback) {
+    if (value == null || value.isBlank()) {
+      return fallback == null ? "" : fallback;
+    }
+    return value;
   }
 
   private ResponseStatusException gatewayException(RestClientResponseException exception) {

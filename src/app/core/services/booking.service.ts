@@ -7,8 +7,10 @@ import {
   Booking,
   BookingPayload,
   PaymentOrderResponse,
+  PaymentPageResponse,
   PaymentQrResponse,
   PaymentStatusResponse,
+  VerifyPaymentLinkPayload,
   VerifyPaymentPayload
 } from '../models/booking.model';
 
@@ -44,6 +46,27 @@ export class BookingService {
         paymentGateway: payment.gateway,
         paymentOrderId: payment.orderId,
         paymentStatus: payment.status
+      }))
+    );
+  }
+
+  createPaymentPage(bookingId: number): Observable<PaymentPageResponse> {
+    return this.http.post<PaymentPageResponse>(`${environment.apiUrl}/payments/bookings/${bookingId}/page`, {}).pipe(
+      tap((payment) => this.patchLocalBooking(bookingId, {
+        paymentGateway: payment.gateway,
+        paymentLinkId: payment.paymentLinkId,
+        paymentLinkUrl: payment.paymentUrl,
+        paymentStatus: payment.status
+      }))
+    );
+  }
+
+  verifyPaymentPage(bookingId: number, payload: VerifyPaymentLinkPayload): Observable<PaymentStatusResponse> {
+    return this.http.post<PaymentStatusResponse>(`${environment.apiUrl}/payments/bookings/${bookingId}/page/verify`, payload).pipe(
+      tap((payment) => this.patchLocalBooking(bookingId, {
+        status: payment.status === 'SUCCESS' ? 'CONFIRMED' : payment.status === 'FAILED' ? 'CANCELLED' : 'PENDING',
+        paymentStatus: payment.status,
+        paymentId: payment.paymentId
       }))
     );
   }
