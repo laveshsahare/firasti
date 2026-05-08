@@ -22,12 +22,12 @@ Update `src/main/resources/application.properties` if your MySQL username or pas
 
 ## Email
 
-The backend sends a welcome email after registration and a ticket email after booking. Update these properties before using email in a real account:
+The backend sends a welcome email after registration and a ticket email after booking. Set these environment variables before using email:
 
-```properties
-spring.mail.username=your-email@gmail.com
-spring.mail.password=your-app-password
-app.mail.from=your-email@gmail.com
+```powershell
+$env:MAIL_USERNAME = 'your-email@gmail.com'
+$env:MAIL_PASSWORD = 'your-gmail-app-password'
+$env:MAIL_FROM = 'your-email@gmail.com'
 ```
 
 For Gmail, use an app password instead of your normal account password.

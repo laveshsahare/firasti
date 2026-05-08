@@ -140,7 +140,7 @@ public class CashfreePaymentService {
     var booking = findUserBooking(bookingId, principal);
 
     if (PAYMENT_SUCCESS.equals(booking.getPaymentStatus())) {
-      return new PaymentStatusResponse(booking.getId(), PAYMENT_SUCCESS, booking.getPaymentId(), "Payment successful. Ticket email already sent.");
+      return paymentSuccessResponse(booking);
     }
 
     if (booking.getPaymentOrderId() == null || booking.getPaymentOrderId().isBlank()) {
@@ -174,8 +174,7 @@ public class CashfreePaymentService {
       booking.setStatus(BookingStatus.CONFIRMED);
       booking.setPaymentId(paymentId);
       var savedBooking = bookingRepository.save(booking);
-      emailService.sendTicketEmail(savedBooking);
-      return new PaymentStatusResponse(savedBooking.getId(), PAYMENT_SUCCESS, savedBooking.getPaymentId(), "Payment successful. Booking ticket has been emailed.");
+      return paymentSuccessResponse(savedBooking);
     }
 
     if ("EXPIRED".equalsIgnoreCase(cashfreeStatus) || "TERMINATED".equalsIgnoreCase(cashfreeStatus)) {
@@ -187,6 +186,14 @@ public class CashfreePaymentService {
     }
 
     return new PaymentStatusResponse(booking.getId(), PAYMENT_PENDING, null, "Payment is still pending. Complete the Cashfree checkout and check again.");
+  }
+
+  private PaymentStatusResponse paymentSuccessResponse(Booking booking) {
+    var emailSent = emailService.sendTicketEmail(booking);
+    var message = emailSent
+        ? "Payment successful. Booking ticket has been emailed."
+        : "Payment successful, but the ticket email could not be sent. Check backend mail settings and try Check status again.";
+    return new PaymentStatusResponse(booking.getId(), PAYMENT_SUCCESS, booking.getPaymentId(), message);
   }
 
   private Booking findUserBooking(Long bookingId, Principal principal) {

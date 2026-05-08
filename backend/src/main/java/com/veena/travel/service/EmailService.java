@@ -23,7 +23,7 @@ public class EmailService {
     this.fromAddress = fromAddress;
   }
 
-  public void sendRegistrationEmail(User user) {
+  public boolean sendRegistrationEmail(User user) {
     var message = new SimpleMailMessage();
     message.setFrom(fromAddress);
     message.setTo(user.getEmail());
@@ -39,13 +39,18 @@ public class EmailService {
         Team Romify
         """.formatted(user.getName()));
 
-    send(message, "registration", user.getEmail());
+    return send(message, "registration", user.getEmail());
   }
 
-  public void sendTicketEmail(Booking booking) {
+  public boolean sendTicketEmail(Booking booking) {
     var recipient = booking.getEmail() == null || booking.getEmail().isBlank()
         ? booking.getUser().getEmail()
         : booking.getEmail();
+
+    if (recipient == null || recipient.isBlank()) {
+      LOGGER.warn("Unable to send ticket email for booking {}: recipient email is missing.", booking.getId());
+      return false;
+    }
 
     var message = new SimpleMailMessage();
     message.setFrom(fromAddress);
@@ -53,7 +58,7 @@ public class EmailService {
     message.setSubject("Romify Ticket - Booking #" + booking.getId());
     message.setText(buildTicketBody(booking));
 
-    send(message, "ticket", recipient);
+    return send(message, "ticket", recipient);
   }
 
   private String buildTicketBody(Booking booking) {
@@ -98,11 +103,14 @@ public class EmailService {
     );
   }
 
-  private void send(SimpleMailMessage message, String emailType, String recipient) {
+  private boolean send(SimpleMailMessage message, String emailType, String recipient) {
     try {
       mailSender.send(message);
+      LOGGER.info("Sent {} email to {}.", emailType, recipient);
+      return true;
     } catch (MailException exception) {
       LOGGER.warn("Unable to send {} email to {}: {}", emailType, recipient, exception.getMessage());
+      return false;
     }
   }
 
