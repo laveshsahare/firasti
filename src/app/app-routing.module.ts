@@ -22,13 +22,13 @@ const routes: Routes = [
     loadChildren: () => import('./features/buses/buses.module').then((m) => m.BusesModule)
   },
   {
-    path: 'booking/:hotelId',
-    redirectTo: 'booking/hotel/:hotelId'
-  },
-  {
     path: 'booking',
     canActivate: [AuthGuard],
     loadChildren: () => import('./features/booking/booking.module').then((m) => m.BookingModule)
+  },
+  {
+    path: 'booking/:hotelId',
+    redirectTo: 'booking/hotel/:hotelId'
   },
   {
     path: 'auth',
