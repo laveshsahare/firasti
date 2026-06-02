@@ -50,6 +50,10 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
+  }
+
   isLoggedIn(): boolean {
     return Boolean(this.getToken());
   }
