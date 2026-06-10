@@ -1,7 +1,7 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 
-const defaultApiUrl = 'https://veena-backend-fam6.onrender.com/api';
+const defaultApiUrl = 'https://firasti-api.onrender.com/api';
 const configuredApiUrl = process.env.API_URL || process.env.NG_APP_API_URL || defaultApiUrl;
 
 const apiUrl = configuredApiUrl.replace(/\/+$/, '');

@@ -1,4 +1,4 @@
-export const environment = {
+﻿export const environment = {
   production: true,
-  apiUrl: "https://veena-backend-fam6.onrender.com/api"
+  apiUrl: 'https://firasti-apiL.onrender.com/api'
 };
