@@ -26,6 +26,7 @@ public class CashfreePaymentService {
   private static final String PAYMENT_SUCCESS = "SUCCESS";
   private static final String PAYMENT_FAILED = "FAILED";
   private static final String GATEWAY_CASHFREE_CHECKOUT = "CASHFREE_CHECKOUT";
+  private static final String BRAND_NAME = "Firasti";
 
   private final BookingRepository bookingRepository;
   private final EmailService emailService;
@@ -46,7 +47,7 @@ public class CashfreePaymentService {
       @Value("${app.cashfree.client-secret:}") String clientSecret,
       @Value("${app.cashfree.api-version:2023-08-01}") String apiVersion,
       @Value("${app.cashfree.mode:sandbox}") String mode,
-      @Value("${app.frontend.base-url:https://romify-travel-and-tours.vercel.app}") String frontendBaseUrl
+      @Value("${app.frontend.base-url:http://localhost:4200}") String frontendBaseUrl
   ) {
     this.bookingRepository = bookingRepository;
     this.emailService = emailService;
@@ -65,21 +66,39 @@ public class CashfreePaymentService {
     requireGatewayConfig();
 
     var orderId = createCashfreeOrderId(booking.getId());
+    var customerName = defaultString(booking.getGuestName(), booking.getUser().getName());
+    var customerEmail = defaultString(booking.getEmail(), booking.getUser().getEmail());
+    var customerPhone = "9999999999";
+
+    if (customerName == null || customerName.isBlank()) {
+      customerName = "Firasti Customer";
+    }
+    if (customerEmail == null || customerEmail.isBlank()) {
+      customerEmail = "customer@firasti.com";
+    }
+
+    System.out.println("[" + BRAND_NAME + "] Creating payment - Name: " + customerName + ", Email: " + customerEmail + ", Phone: " + customerPhone + ", Amount: " + amount);
+
     var body = Map.ofEntries(
         Map.entry("order_id", orderId),
         Map.entry("order_amount", amount),
         Map.entry("order_currency", "INR"),
         Map.entry("customer_details", Map.of(
             "customer_id", "customer_" + booking.getUser().getId(),
-            "customer_name", defaultString(booking.getGuestName(), booking.getUser().getName()),
-            "customer_email", defaultString(booking.getEmail(), booking.getUser().getEmail()),
-            "customer_phone", "9999999999"
+            "customer_name", customerName,
+            "customer_email", customerEmail,
+            "customer_phone", customerPhone
         )),
         Map.entry("order_meta", Map.of(
-            "return_url", frontendBaseUrl + "/booking/payment/" + booking.getId() + "?cashfree_order_id={order_id}"
+            "return_url", frontendBaseUrl + "/booking/payment/" + booking.getId() + "?cashfree_order_id={order_id}",
+            "notify_url", frontendBaseUrl + "/booking/payment/" + booking.getId()
         )),
-        Map.entry("order_note", "Romify booking #" + booking.getId()),
-        Map.entry("order_tags", Map.of("booking_id", booking.getId().toString()))
+        Map.entry("order_note", BRAND_NAME + " Travel Booking #" + booking.getId()),
+        Map.entry("order_tags", Map.of(
+            "booking_id", booking.getId().toString(),
+            "brand", BRAND_NAME,
+            "type", "travel_booking"
+        ))
     );
 
     JsonNode response;
@@ -115,10 +134,10 @@ public class CashfreePaymentService {
         amount.multiply(BigDecimal.valueOf(100)).setScale(0, RoundingMode.HALF_UP).intValueExact(),
         "INR",
         PAYMENT_PENDING,
-        "Romify",
-        "Booking #" + booking.getId(),
-        booking.getGuestName(),
-        booking.getEmail()
+        BRAND_NAME,
+        BRAND_NAME + " Travel Booking #" + booking.getId(),
+        customerName,
+        customerEmail
     );
   }
 
@@ -126,7 +145,7 @@ public class CashfreePaymentService {
     var booking = findUserBooking(bookingId, principal);
 
     if (booking.getPaymentOrderId() == null || booking.getPaymentOrderId().isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Create a Cashfree order before verifying payment.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Create a " + BRAND_NAME + " payment order before verifying payment.");
     }
 
     if (!booking.getPaymentOrderId().equals(request.cashfreeOrderId())) {
@@ -144,7 +163,7 @@ public class CashfreePaymentService {
     }
 
     if (booking.getPaymentOrderId() == null || booking.getPaymentOrderId().isBlank()) {
-      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Create a Cashfree payment order before checking payment status.");
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Create a " + BRAND_NAME + " payment order before checking payment status.");
     }
 
     return resolveOrderStatus(booking);
@@ -168,6 +187,8 @@ public class CashfreePaymentService {
     var cfOrderId = response == null ? "" : response.path("cf_order_id").asText();
     var paymentId = cfOrderId.isBlank() ? booking.getPaymentOrderId() : cfOrderId;
 
+    System.out.println("[" + BRAND_NAME + "] Payment Status Check - Booking #" + booking.getId() + " - Status: " + cashfreeStatus);
+
     if ("PAID".equalsIgnoreCase(cashfreeStatus)) {
       booking.setPaymentGateway(GATEWAY_CASHFREE_CHECKOUT);
       booking.setPaymentStatus(PAYMENT_SUCCESS);
@@ -182,17 +203,36 @@ public class CashfreePaymentService {
       booking.setStatus(BookingStatus.CANCELLED);
       booking.setPaymentId(paymentId);
       bookingRepository.save(booking);
-      return new PaymentStatusResponse(booking.getId(), PAYMENT_FAILED, booking.getPaymentId(), "Payment was not completed. Please create a new payment and try again.");
+      return new PaymentStatusResponse(
+          booking.getId(),
+          PAYMENT_FAILED,
+          booking.getPaymentId(),
+          "Payment was not completed. Please create a new " + BRAND_NAME + " payment and try again."
+      );
     }
 
-    return new PaymentStatusResponse(booking.getId(), PAYMENT_PENDING, null, "Payment is still pending. Complete the Cashfree checkout and check again.");
+    if ("ACTIVE".equalsIgnoreCase(cashfreeStatus)) {
+      return new PaymentStatusResponse(
+          booking.getId(),
+          PAYMENT_PENDING,
+          paymentId,
+          "Payment is in progress. Please complete the " + BRAND_NAME + " checkout and try Check Status again."
+      );
+    }
+
+    return new PaymentStatusResponse(
+        booking.getId(),
+        PAYMENT_PENDING,
+        paymentId,
+        "Payment status: " + cashfreeStatus + ". Complete the " + BRAND_NAME + " checkout and check again."
+    );
   }
 
   private PaymentStatusResponse paymentSuccessResponse(Booking booking) {
     var emailSent = emailService.sendTicketEmail(booking);
     var message = emailSent
-        ? "Payment successful. Booking ticket has been emailed."
-        : "Payment successful, but the ticket email could not be sent. Check backend mail settings and try Check status again.";
+        ? "Payment successful! Your " + BRAND_NAME + " booking ticket has been emailed."
+        : "Payment successful! Your " + BRAND_NAME + " booking is confirmed. Email could not be sent - check backend mail settings.";
     return new PaymentStatusResponse(booking.getId(), PAYMENT_SUCCESS, booking.getPaymentId(), message);
   }
 
@@ -215,7 +255,7 @@ public class CashfreePaymentService {
 
   private void requireGatewayConfig() {
     if (clientId.isBlank() || clientSecret.isBlank()) {
-      throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Cashfree credentials are not configured.");
+      throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, BRAND_NAME + " payment gateway is not configured.");
     }
   }
 
@@ -226,7 +266,7 @@ public class CashfreePaymentService {
   }
 
   private String createCashfreeOrderId(Long bookingId) {
-    return "booking_" + bookingId + "_" + Instant.now().toEpochMilli();
+    return "firasti_booking_" + bookingId + "_" + Instant.now().toEpochMilli();
   }
 
   private String defaultString(String value, String fallback) {
@@ -241,7 +281,7 @@ public class CashfreePaymentService {
   }
 
   private ResponseStatusException gatewayException(RestClientResponseException exception) {
-    var message = "Cashfree payment gateway request failed.";
+    var message = BRAND_NAME + " payment gateway request failed.";
 
     try {
       var body = objectMapper.readTree(exception.getResponseBodyAsString());
@@ -255,6 +295,7 @@ public class CashfreePaymentService {
       }
     }
 
+    System.err.println("[" + BRAND_NAME + "] Cashfree Error: " + message);
     return new ResponseStatusException(HttpStatus.BAD_GATEWAY, message);
   }
 }

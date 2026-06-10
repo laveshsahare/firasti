@@ -1,4 +1,4 @@
-# Romify Backend
+# Firasti Backend
 
 Spring Boot + MySQL backend for the Angular travel booking MVP.
 
@@ -68,7 +68,7 @@ http://localhost:8080/api
 Seeded admin user:
 
 ```text
-email: admin@romify.com
+email: admin@firasti.com
 password: admin@123
 ```
 

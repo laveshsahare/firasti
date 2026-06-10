@@ -1,7 +1,41 @@
-/node_modules
-/dist
-/.angular
-/.vscode
+﻿# Node
+node_modules/
 npm-debug.log
 yarn-error.log
-backend/target
+
+# Angular
+.angular/
+dist/
+tmp/
+out-tsc/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Environment
+.env
+.env.local
+.env.production
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+backend/*.log
+backend/backend-*.log
+
+# Maven
+backend/target/
+backend/.mvn/
+
+# Java
+*.class
+*.jar
+backend/HELP.md
+
+# Sensitive Files
+backend/start-firasti.ps1

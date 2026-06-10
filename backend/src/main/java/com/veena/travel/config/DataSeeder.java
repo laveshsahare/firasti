@@ -35,10 +35,10 @@ public class DataSeeder {
   }
 
   private void seedUsers(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-    if (!userRepository.existsByEmail("admin@romify.com")) {
+    if (!userRepository.existsByEmail("admin@firasti.com")) {
       var admin = new User();
-      admin.setName("Admin");
-      admin.setEmail("admin@romify.com");
+      admin.setName("Firasti Admin");
+      admin.setEmail("admin@firasti.com");
       admin.setPassword(passwordEncoder.encode("admin@123"));
       admin.setRole(Role.ADMIN);
       userRepository.save(admin);
@@ -70,15 +70,15 @@ public class DataSeeder {
     }
 
     var hasOneRupeeHotel = hotelRepository.findAll().stream()
-        .anyMatch(hotel -> "Romify Budget Stay".equalsIgnoreCase(hotel.getName()));
+        .anyMatch(hotel -> "Firasti Budget Stay".equalsIgnoreCase(hotel.getName()));
     if (!hasOneRupeeHotel) {
       hotelRepository.save(hotel(
-          "Romify Budget Stay",
+          "Firasti Budget Stay",
           "Pune, India",
           "1",
           4.1,
           true,
-          "A demo hotel option with a one rupee fare for testing booking and QR payment.",
+          "A demo Firasti hotel option with a one rupee fare for testing booking and payment.",
           List.of("Free Wi-Fi", "Breakfast", "City access"),
           List.of("https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=1200&q=80")
       ));
@@ -92,9 +92,9 @@ public class DataSeeder {
     }
 
     var hasOneRupeeFlight = flightRepository.findAll().stream()
-        .anyMatch(flight -> "RF 001".equalsIgnoreCase(flight.getFlightNumber()));
+        .anyMatch(flight -> "FF 001".equalsIgnoreCase(flight.getFlightNumber()));
     if (!hasOneRupeeFlight) {
-      flightRepository.save(flight("Romify Air", "RF 001", "Pune", "Mumbai", "10:00", "10:45", "45m", 0, "1", 4.3, "Economy"));
+      flightRepository.save(flight("Firasti Air", "FF 001", "Pune", "Mumbai", "10:00", "10:45", "45m", 0, "1", 4.3, "Economy"));
     }
   }
 
@@ -105,9 +105,9 @@ public class DataSeeder {
     }
 
     var hasOneRupeeBus = busRepository.findAll().stream()
-        .anyMatch(bus -> "RB 001".equalsIgnoreCase(bus.getBusNumber()));
+        .anyMatch(bus -> "FB 001".equalsIgnoreCase(bus.getBusNumber()));
     if (!hasOneRupeeBus) {
-      busRepository.save(bus("Romify Express", "RB 001", "Pune", "Satara", "08:00", "10:30", "2h 30m", "AC Seater", 40, "1", 4.2));
+      busRepository.save(bus("Firasti Express", "FB 001", "Pune", "Satara", "08:00", "10:30", "2h 30m", "AC Seater", 40, "1", 4.2));
     }
   }
 

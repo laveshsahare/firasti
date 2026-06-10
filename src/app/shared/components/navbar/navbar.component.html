@@ -1,32 +1,83 @@
 <header class="nav">
   <div class="container nav__inner">
-    <a class="brand" routerLink="/" aria-label="Romify home">
-      <span class="brand__mark">R</span>
-      <span>Romify</span>
-    </a>
+    <a class="brand" routerLink="/" aria-label="Firasti home">
+  <span class="brand__mark">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="32" height="32" fill="none">
+      <!-- F Letter with travel paths -->
+      <defs>
+        <linearGradient id="fGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <!-- Main F shape -->
+      <path d="M12 8 L12 42 L18 42 L18 28 L32 28 L32 22 L18 22 L18 14 L36 14 L36 8 Z" 
+            fill="url(#fGradient)" 
+            stroke="white" 
+            stroke-width="0.5"/>
+      <!-- Decorative airplane -->
+      <path d="M38 12 L42 10 L40 14 L42 18 L38 16 Z" 
+            fill="white" 
+            opacity="0.9"/>
+      <!-- Decorative dots (route) -->
+      <circle cx="38" cy="32" r="1.5" fill="white" opacity="0.7"/>
+      <circle cx="42" cy="35" r="1.5" fill="white" opacity="0.5"/>
+      <circle cx="38" cy="38" r="1.5" fill="white" opacity="0.4"/>
+    </svg>
+  </span>
+  <span class="brand__text">
+    <span class="brand__name">Firasti</span>
+    <span class="brand__tagline">Travel & Tours</span>
+  </span>
+</a>
 
-    <button class="nav__toggle" type="button" (click)="menuOpen = !menuOpen" aria-label="Toggle navigation">
+    <button class="nav__toggle" type="button" (click)="menuOpen = !menuOpen" aria-label="Toggle navigation" [class.active]="menuOpen">
       <span></span>
       <span></span>
       <span></span>
     </button>
 
     <nav class="nav__links" [class.open]="menuOpen">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">Home</a>
-      <a routerLink="/hotels" routerLinkActive="active" (click)="menuOpen = false">Hotels</a>
-      <a routerLink="/flights" routerLinkActive="active" (click)="menuOpen = false">Flights</a>
-      <a routerLink="/buses" routerLinkActive="active" (click)="menuOpen = false">Buses</a>
-      <a routerLink="/admin" routerLinkActive="active" (click)="menuOpen = false">Admin</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOpen = false">
+        <span class="nav__icon">🏠</span>
+        <span>Home</span>
+      </a>
+      <a routerLink="/hotels" routerLinkActive="active" (click)="menuOpen = false">
+        <span class="nav__icon">🏨</span>
+        <span>Hotels</span>
+      </a>
+      <a routerLink="/flights" routerLinkActive="active" (click)="menuOpen = false">
+        <span class="nav__icon">✈️</span>
+        <span>Flights</span>
+      </a>
+      <a routerLink="/buses" routerLinkActive="active" (click)="menuOpen = false">
+        <span class="nav__icon">🚌</span>
+        <span>Buses</span>
+      </a>
+      <a routerLink="/admin" routerLinkActive="active" (click)="menuOpen = false" class="nav__admin">
+        <span class="nav__icon">⚙️</span>
+        <span>Admin</span>
+      </a>
 
       <ng-container *ngIf="currentUser$ | async as user; else guestLinks">
-        <a routerLink="/booking/history" routerLinkActive="active" (click)="menuOpen = false">My Bookings</a>
-        <span class="nav__user">{{ user.name }}</span>
-        <button class="btn secondary" type="button" (click)="logout()">Logout</button>
+        <a routerLink="/booking/history" routerLinkActive="active" (click)="menuOpen = false">
+          <span class="nav__icon">🎫</span>
+          <span>My Bookings</span>
+        </a>
+        <div class="nav__user-section">
+          <span class="nav__user">
+            <span class="nav__user-avatar">{{ user.name.charAt(0).toUpperCase() }}</span>
+            <span class="nav__user-name">{{ user.name }}</span>
+          </span>
+          <button class="btn secondary" type="button" (click)="logout()">
+            <span>Logout</span>
+          </button>
+        </div>
       </ng-container>
 
       <ng-template #guestLinks>
         <a class="btn secondary" routerLink="/auth/login" (click)="menuOpen = false">Login</a>
-        <a class="btn" routerLink="/auth/register" (click)="menuOpen = false">Register</a>
+        <a class="btn" routerLink="/auth/register" (click)="menuOpen = false">Sign Up</a>
       </ng-template>
     </nav>
   </div>

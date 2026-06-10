@@ -12,10 +12,10 @@
   </parent>
 
   <groupId>com.veena</groupId>
-  <artifactId>romify-backend</artifactId>
+  <artifactId>firasti-backend</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>Romify Backend</name>
-  <description>Spring Boot backend for Romify</description>
+  <name>Firasti Backend</name>
+  <description>Spring Boot backend for Firasti</description>
 
   <properties>
     <java.version>17</java.version>

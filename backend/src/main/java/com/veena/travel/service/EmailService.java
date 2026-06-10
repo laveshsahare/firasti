@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
   private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
+  private static final String BRAND_NAME = "Firasti";
+  private static final String BRAND_TAGLINE = "Your Travel Companion";
 
   private final JavaMailSender mailSender;
   private final String fromAddress;
@@ -27,17 +29,35 @@ public class EmailService {
     var message = new SimpleMailMessage();
     message.setFrom(fromAddress);
     message.setTo(user.getEmail());
-    message.setSubject("Welcome to Romify");
+    message.setSubject("Welcome to " + BRAND_NAME + " - " + BRAND_TAGLINE);
     message.setText("""
         Hello %s,
 
-        Welcome to Romify.
+        Welcome to %s! 🎉
 
-        Your account has been created successfully. You can now search hotels, flights, buses, book your travel, and use the Romify city guide chatbot for place suggestions.
+        Your account has been created successfully. You can now:
+
+        ✈️  Search and book flights at great prices
+        🏨  Find perfect hotels for your stay
+        🚌  Book buses for your road journeys
+        🗺️  Use our city guide for travel suggestions
+        💳  Secure payments through Cashfree
+
+        Start exploring at %s and make your travel dreams come true!
 
         Happy travelling,
-        Team Romify
-        """.formatted(user.getName()));
+        Team %s
+        %s
+
+        ---
+        Need help? Reply to this email or visit our support page.
+        """.formatted(
+            user.getName(),
+            BRAND_NAME,
+            BRAND_NAME,
+            BRAND_NAME,
+            BRAND_TAGLINE
+        ));
 
     return send(message, "registration", user.getEmail());
   }
@@ -55,7 +75,7 @@ public class EmailService {
     var message = new SimpleMailMessage();
     message.setFrom(fromAddress);
     message.setTo(recipient);
-    message.setSubject("Romify Ticket - Booking #" + booking.getId());
+    message.setSubject(BRAND_NAME + " Ticket Confirmation - Booking #" + booking.getId());
     message.setText(buildTicketBody(booking));
 
     return send(message, "ticket", recipient);
@@ -63,28 +83,70 @@ public class EmailService {
 
   private String buildTicketBody(Booking booking) {
     return """
-        ROMIFY TRAVEL TICKET
+        ═══════════════════════════════════════
+              %s TRAVEL TICKET
+              %s
+        ═══════════════════════════════════════
 
-        Booking ID: %s
-        Status: %s
-        Product Type: %s
-        Passenger / Guest Name: %s
-        Email: %s
-        Title: %s
-        Route / Location: %s
-        Travel Date: %s
-        Check-in: %s
-        Check-out: %s
-        Departure Date: %s
-        Return Date: %s
-        Guests: %s
-        Passengers: %s
-        Amount: %s
+        🎫 BOOKING CONFIRMATION
 
-        Please keep this email as your booking ticket.
-
-        Thank you for booking with Romify.
+        Booking ID         : %s
+        Status             : %s
+        Product Type       : %s
+        
+        ───────────────────────────────────────
+        👤 PASSENGER / GUEST DETAILS
+        ───────────────────────────────────────
+        Name               : %s
+        Email              : %s
+        
+        ───────────────────────────────────────
+        📍 BOOKING DETAILS
+        ───────────────────────────────────────
+        Title              : %s
+        Route / Location   : %s
+        Travel Date        : %s
+        Check-in Date      : %s
+        Check-out Date     : %s
+        Departure Date     : %s
+        Return Date        : %s
+        
+        ───────────────────────────────────────
+        👥 GUESTS / PASSENGERS
+        ───────────────────────────────────────
+        Guests             : %s
+        Passengers         : %s
+        
+        ───────────────────────────────────────
+        💰 PAYMENT
+        ───────────────────────────────────────
+        Total Amount       : %s
+        
+        ═══════════════════════════════════════
+        
+        📌 IMPORTANT INFORMATION:
+        
+        • Please keep this email as your booking ticket
+        • Show this ticket at the time of check-in/boarding
+        • Carry a valid government ID proof
+        • Arrive at least 30 minutes before departure
+        
+        ───────────────────────────────────────
+        
+        Thank you for choosing %s!
+        We wish you a pleasant journey. ✈️🚌🏨
+        
+        Best Regards,
+        Team %s
+        %s
+        
+        ═══════════════════════════════════════
+        
+        Need help? Reply to this email.
+        Visit us again at %s for more bookings!
         """.formatted(
+        BRAND_NAME,
+        BRAND_TAGLINE,
         value(booking.getId()),
         value(booking.getStatus()),
         value(booking.getProductType()),
@@ -99,17 +161,21 @@ public class EmailService {
         value(booking.getReturnDate()),
         value(booking.getGuests()),
         value(booking.getPassengers()),
-        amount(booking.getPrice())
+        amount(booking.getPrice()),
+        BRAND_NAME,
+        BRAND_NAME,
+        BRAND_TAGLINE,
+        BRAND_NAME
     );
   }
 
   private boolean send(SimpleMailMessage message, String emailType, String recipient) {
     try {
       mailSender.send(message);
-      LOGGER.info("Sent {} email to {}.", emailType, recipient);
+      LOGGER.info("[{}] Sent {} email to {}.", BRAND_NAME, emailType, recipient);
       return true;
     } catch (MailException exception) {
-      LOGGER.warn("Unable to send {} email to {}: {}", emailType, recipient, exception.getMessage());
+      LOGGER.warn("[{}] Unable to send {} email to {}: {}", BRAND_NAME, emailType, recipient, exception.getMessage());
       return false;
     }
   }
@@ -119,6 +185,6 @@ public class EmailService {
   }
 
   private String amount(BigDecimal value) {
-    return value == null ? "-" : "INR " + value;
+    return value == null ? "-" : "₹ " + value;
   }
 }
